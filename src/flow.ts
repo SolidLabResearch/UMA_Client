@@ -9,8 +9,6 @@ import { randomUUID } from 'crypto';
 const resourceServer = "http://localhost:5656/"
 const policyAPI = "http://localhost:3000/ruben/settings/policies/"
 
-
-
 const terms = {
     solid: {
       umaServer: 'http://www.w3.org/ns/solid/terms#umaServer',
@@ -141,12 +139,12 @@ ${umaHeader}`)
         uid: `http://example.org/HCPX-request/${randomUUID()}`,
         description: "HCP X requests to read Alice's health data for bariatric care.",
         permission: [ {
-        "@type": "Permission",
-        "uid": `http://example.org/HCPX-request-permission/${randomUUID()}`,
-        assigner: terms.agents.ruben,
-        assignee: terms.agents.alice,
-        action: { "@id": "https://w3id.org/oac#read" },
-        target: terms.resources.external,
+            "@type": "Permission",
+            "uid": `http://example.org/HCPX-request-permission/${randomUUID()}`,
+            assigner: terms.agents.ruben,
+            assignee: terms.agents.alice,
+            action: { "@id": "https://w3id.org/oac#read" },
+            target: terms.resources.external,
         } ],
         grant_type: "urn:ietf:params:oauth:grant-type:uma-ticket",
         ticket,
@@ -248,7 +246,10 @@ ${umaHeader}`)
     }
 
     const tokenParams = await accessGrantedResponse.json();
+    console.log('Token params', tokenParams)
     const access_token = parseJwt(tokenParams.access_token)
+
+    console.log('full access token', JSON.stringify(access_token, null, 2))
 
     log(`The UMA server checks the claims with the relevant policy, and returns the agent an access token with the requested permissions.`, 
         JSON.stringify(access_token.permissions, null, 2));
