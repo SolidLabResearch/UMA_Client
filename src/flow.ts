@@ -69,44 +69,44 @@ Target Resource:  ${terms.resources.external}`)
     });
     console.log(await medicalResourcePost.text())
 
-    // Adding Read Policy over data
-    log()
-    log('To protect this data, a policy is added restricting access to a specific healthcare employee for the purpose of bariatric care.');
-    log(chalk.italic(`Note: Policy management is out of scope for POC1, right now they are just served from a public container on the pod.
-additionally, selecting relevant policies is not implemented at the moment, all policies are evaluated, but this is a minor fix in the AS.`))
+//     // Adding Read Policy over data
+//     log()
+//     log('To protect this data, a policy is added restricting access to a specific healthcare employee for the purpose of bariatric care.');
+//     log(chalk.italic(`Note: Policy management is out of scope for POC1, right now they are just served from a public container on the pod.
+// additionally, selecting relevant policies is not implemented at the moment, all policies are evaluated, but this is a minor fix in the AS.`))
     
 
-    const healthcare_patient_policy = `PREFIX dcterms: <http://purl.org/dc/terms/>
-    PREFIX eu-gdpr: <https://w3id.org/dpv/legal/eu/gdpr#>
-    PREFIX oac: <https://w3id.org/oac#>
-    PREFIX odrl: <http://www.w3.org/ns/odrl/2/>
-    PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+//     const healthcare_patient_policy = `PREFIX dcterms: <http://purl.org/dc/terms/>
+//     PREFIX eu-gdpr: <https://w3id.org/dpv/legal/eu/gdpr#>
+//     PREFIX oac: <https://w3id.org/oac#>
+//     PREFIX odrl: <http://www.w3.org/ns/odrl/2/>
+//     PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
-    PREFIX ex: <http://example.org/>
+//     PREFIX ex: <http://example.org/>
 
-    <http://example.org/HCPX-request> a odrl:Request ;
-        odrl:uid ex:HCPX-request ;
-        odrl:profile oac: ;
-        dcterms:description "HCP X requests to read Alice's health data for bariatric care.";
-        odrl:permission <http://example.org/HCPX-request-permission> .
+//     <http://example.org/HCPX-request> a odrl:Request ;
+//         odrl:uid ex:HCPX-request ;
+//         odrl:profile oac: ;
+//         dcterms:description "HCP X requests to read Alice's health data for bariatric care.";
+//         odrl:permission <http://example.org/HCPX-request-permission> .
 
-    <http://example.org/HCPX-request-permission> a odrl:Permission ;
-        odrl:action odrl:read ;
-        odrl:target <${terms.resources.external}> ;
-        odrl:assigner <${terms.agents.ruben}> ;
-        odrl:assignee <${terms.agents.alice}> ;
-        odrl:constraint <http://example.org/HCPX-request-permission-purpose> .
+//     <http://example.org/HCPX-request-permission> a odrl:Permission ;
+//         odrl:action odrl:read ;
+//         odrl:target <${terms.resources.external}> ;
+//         odrl:assigner <${terms.agents.ruben}> ;
+//         odrl:assignee <${terms.agents.alice}> ;
+//         odrl:constraint <http://example.org/HCPX-request-permission-purpose> .
 
-    <http://example.org/HCPX-request-permission-purpose> a odrl:Constraint ;
-        odrl:leftOperand odrl:purpose ; # can also be oac:Purpose, to conform with OAC profile
-        odrl:operator odrl:eq ;
-        odrl:rightOperand ex:bariatric-care .`
+//     <http://example.org/HCPX-request-permission-purpose> a odrl:Constraint ;
+//         odrl:leftOperand odrl:purpose ; # can also be oac:Purpose, to conform with OAC profile
+//         odrl:operator odrl:eq ;
+//         odrl:rightOperand ex:bariatric-care .`
     
-    log()   
-    await client.addPolicy(healthcare_patient_policy)
+//     log()   
+//     await client.addPolicy(healthcare_patient_policy)
 
-    log(`The policy assigns read permissions for the personal doctor ${terms.agents.alice} of the patient for the smartwatch resource 
-on the condition of the purpose of the request being "http://example.org/bariatric-care".`)
+//     log(`The policy assigns read permissions for the personal doctor ${terms.agents.alice} of the patient for the smartwatch resource 
+// on the condition of the purpose of the request being "http://example.org/bariatric-care".`)
     
     // Accessing the data
 
@@ -126,6 +126,7 @@ ${umaHeader}`)
     let as_uri = umaHeader?.split('as_uri=')[1].split('"')[1]
     let ticket = umaHeader?.split('ticket=')[1].replace(/"/g, '')
 
+    log('')
     log('Discovered UMA Authorization Server URI:', as_uri)
     as_uri = as_uri?.endsWith('/') ? as_uri : as_uri + "/";
 
@@ -164,7 +165,8 @@ ${umaHeader}`)
 
     const { ticket: ticket2, required_claims: doctor_claims } = await doctor_needInfoResponse.json();
     ticket = ticket2
-    
+   
+    log('') 
     log(`Based on the policy set above, the Authorization Server requests the following claims from the doctor:`);
     doctor_claims.claim_token_format[0].forEach((format: string) => log(`  - ${format}`))
     log(`accompanied by an updated ticket: ${ticket}.`)
@@ -179,12 +181,12 @@ ${umaHeader}`)
 
     const claims: any = {
         "http://www.w3.org/ns/odrl/2/purpose": "http://example.org/bariatric-care",
-        "urn:solidlab:uma:claims:types:webid": "http://localhost:3000/alice/profile/card#me",
+        "urn:solidlab:uma:claims:types:webid": terms.agents.alice,
         "https://w3id.org/oac#LegalBasis": "https://w3id.org/dpv/legal/eu/gdpr#A9-2-a"
     }
 
+    log('')
     log(`The doctor's client now gathers the necessary claims (how is out-of-scope for this demo)`, claims)
-
     log(`and bundles them as an UMA-compliant JWT.`, {
         claim_token: claim_token,
         claim_token_format: "urn:solidlab:uma:claims:formats:jwt"
@@ -197,27 +199,27 @@ ${umaHeader}`)
         uid: `http://example.org/HCPX-request/${randomUUID()}`,
         description: "HCP X requests to read Alice's health data for bariatric care.",
         permission: [ {
-        "@type": "Permission",
-        "@id": `http://example.org/HCPX-request-permission/${randomUUID()}`,
-        target: terms.resources.external,
-        action: { "@id": "https://w3id.org/oac#read" },
-        assigner: terms.agents.ruben,
-        assignee: terms.agents.alice,
-        constraint: [
-            {
-            "@type": "Constraint",
-            "@id": `http://example.org/HCPX-request-permission-purpose/${randomUUID()}`,
-            leftOperand: "purpose",
-            operator: "eq",
-            rightOperand: { "@id": "http://example.org/bariatric-care" },
-            }, {
-            "@type": "Constraint",
-            "@id": `http://example.org/HCPX-request-permission-purpose/${randomUUID()}`,
-            leftOperand: { "@id": "https://w3id.org/oac#LegalBasis" },
-            operator: "eq",
-            rightOperand: {"@id": "https://w3id.org/dpv/legal/eu/gdpr#A9-2-a" },
-            }
-        ],
+            "@type": "Permission",
+            "@id": `http://example.org/HCPX-request-permission/${randomUUID()}`,
+            target: terms.resources.external,
+            action: { "@id": "https://w3id.org/oac#read" },
+            assigner: terms.agents.ruben,
+            assignee: terms.agents.alice,
+            constraint: [
+                {
+                    "@type": "Constraint",
+                    "@id": `http://example.org/HCPX-request-permission-purpose/${randomUUID()}`,
+                    leftOperand: "purpose",
+                    operator: "eq",
+                    rightOperand: { "@id": "http://example.org/bariatric-care" },
+                }, {
+                    "@type": "Constraint",
+                    "@id": `http://example.org/HCPX-request-permission-purpose/${randomUUID()}`,
+                    leftOperand: { "@id": "https://w3id.org/oac#LegalBasis" },
+                    operator: "eq",
+                    rightOperand: {"@id": "https://w3id.org/dpv/legal/eu/gdpr#A9-2-a" },
+                }
+            ],
         } ],
         // claims: [{
         claim_token: claim_token, 
@@ -228,12 +230,13 @@ ${umaHeader}`)
         ticket,
     }
 
+    log('')
     log('Together with the UMA grant_type and ticket requirements, these are bundled as an ODRL Request and sent back to the Authorization Server')
     log(JSON.stringify(smartWatchAccessRequestODRL, null, 2))
     
-    log(chalk.italic(`Note: the ODRL Request constraints are not yet evaluated as claims, only the passed claim token is.
-    There are two main points of work here: right now the claim token gathers all claims internally, as only a single token can be passed.
-    This is problematic when claims and OIDC tokens have to be passed. It might be worth looking deeper into ODRL requests to carry these claims instead of an UMA token.`))
+    // log(chalk.italic(`Note: the ODRL Request constraints are not yet evaluated as claims, only the passed claim token is.
+    // There are two main points of work here: right now the claim token gathers all claims internally, as only a single token can be passed.
+    // This is problematic when claims and OIDC tokens have to be passed. It might be worth looking deeper into ODRL requests to carry these claims instead of an UMA token.`))
 
     const accessGrantedResponse = await fetch(tokenEndpoint, {
         method: "POST",
@@ -251,18 +254,21 @@ ${umaHeader}`)
 
     console.log('full access token', JSON.stringify(access_token, null, 2))
 
+    log('')
     log(`The UMA server checks the claims with the relevant policy, and returns the agent an access token with the requested permissions.`, 
         JSON.stringify(access_token.permissions, null, 2));
     
     log(`and the accompanying agreement:`, 
         JSON.stringify(access_token.contract, null, 2));
     
+    log('')
     log(chalk.italic(`Future work: at a later stage, this agreements will be signed by both parties to form a binding contract.`))
 
     const accessWithTokenResponse = await fetch(terms.resources.external, {
         headers: { 'Authorization': `${tokenParams.token_type} ${tokenParams.access_token}` }
     });
 
+    log('')
     log(`Now the doctor can retrieve the resource:`, await accessWithTokenResponse.text());
 
     if (accessWithTokenResponse.status !== 200) { log(`Access with token failed...`); throw 0; }
